@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>병원 매출 예측 시트</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #2c5aa0;
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #2c5aa0;
+            padding-bottom: 10px;
+        }
+        
+        .input-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #495057;
+        }
+        
+        input[type="text"] {
+            width: 300px;
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            text-align: right;
+            font-family: 'Segoe UI', 'Arial', sans-serif;
+            font-variant-numeric: tabular-nums;
+        }
+        
+        input[type="text"]:focus {
+            border-color: #2c5aa0;
+            outline: none;
+        }
+        
+        .input-display {
+            margin-top: 5px;
+            font-size: 12px;
+            color: #666;
+            font-weight: normal;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+        }
+        
+        th, td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: #2c5aa0;
+            color: white;
+            font-weight: bold;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        tr:hover {
+            background-color: #e9ecef;
+        }
+        
+        .highlight {
+            background-color: #fff3cd !important;
+            font-weight: bold;
+        }
+        
+        .number {
+            text-align: right;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .summary-section {
+            background: #e7f3ff;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 30px;
+        }
+        
+        .summary-title {
+            color: #2c5aa0;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .note {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏥 병원 매출 예측 (NestSolution)</h1>
+        
+        <div class="input-section">
+            <h3>📊 기본 정보 입력</h3>
+            <div class="input-group">
+                <label for="cardRevenue">카드 매출 (원):</label>
+                <input type="text" id="cardRevenue" placeholder="300,000,000" value="300,000,000">
+                <div class="input-display" id="cardRevenueDisplay">(삼억원)</div>
+            </div>
+        </div>
+
+        <div class="summary-section">
+            <div class="summary-title">💡 예측 모델 기준</div>
+            <p><strong>기준점 1:</strong> 카드매출 3억원 → 비급여 40% 시 총매출 5.4억원 (1.8배)</p>
+            <p><strong>기준점 2:</strong> 카드매출 3억원 → 비급여 5% 시 총매출 9억원 (3.0배)</p>
+            <p><strong>예측 로직:</strong> 비급여 비중이 증가할수록 총매출이 감소하는 선형 구조</p>
+        </div>
+
+        <table id="predictionTable">
+            <thead>
+                <tr>
+                    <th>비급여 비중</th>
+                    <th>급여 비중</th>
+                    <th>예상 총매출</th>
+                    <th>카드매출 대비 배율</th>
+                    <th>급여 매출</th>
+                    <th>비급여 매출</th>
+                    <th>환자 실부담 (급여)</th>
+                    <th>환자 실부담 (비급여)</th>
+                    <th>총 환자부담</th>
+                    <th>매출 증가율</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+            </tbody>
+        </table>
+
+        <div class="note">
+            <strong>📝 계산 근거:</strong><br>
+            • 기준점: 비급여 5% → 3.0배, 비급여 40% → 1.8배<br>
+            • 비급여 비중이 증가할수록 총매출 배율이 선형적으로 감소<br>
+            • 5%~40% 구간: 급격한 감소, 40%~80% 구간: 완만한 감소<br>
+            • 급여: 환자 부담 1/3, 보험공단 부담 2/3<br>
+            • 비급여: 환자 부담 100%<br>
+            • 카드매출은 환자가 실제 지불한 금액을 반영<br>
+            • 비급여 비중이 감소할수록 총매출이 증가하는 구조
+        </div>
+    </div>
+
+    <script>
+        // 숫자 포맷팅 함수들
+        function formatNumber(num) {
+            return new Intl.NumberFormat('ko-KR').format(Math.round(num));
+        }
+        
+        function addCommas(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        }
+        
+        function removeCommas(str) {
+            return parseFloat(str.replace(/,/g, '')) || 0;
+        }
+        
+        // 숫자를 한글로 변환
+        function toKorean(num) {
+            const units = ['', '만', '억', '조'];
+            const digits = ['', '일', '이', '삼', '사', '오', '육', '칠', '팔', '구'];
+            
+            if (num === 0) return '영원';
+            
+            let result = '';
+            let unitIndex = 0;
+            
+            while (num > 0) {
+                const part = num % 10000;
+                if (part > 0) {
+                    let partStr = '';
+                    
+                    if (Math.floor(part / 1000) > 0) {
+                        const thousand = Math.floor(part / 1000);
+                        if (thousand > 1) partStr += digits[thousand];
+                        partStr += '천';
+                    }
+                    
+                    if (Math.floor((part % 1000) / 100) > 0) {
+                        const hundred = Math.floor((part % 1000) / 100);
+                        if (hundred > 1) partStr += digits[hundred];
+                        partStr += '백';
+                    }
+                    
+                    if (Math.floor((part % 100) / 10) > 0) {
+                        const ten = Math.floor((part % 100) / 10);
+                        if (ten > 1) partStr += digits[ten];
+                        partStr += '십';
+                    }
+                    
+                    if (part % 10 > 0) {
+                        partStr += digits[part % 10];
+                    }
+                    
+                    result = partStr + units[unitIndex] + result;
+                }
+                
+                num = Math.floor(num / 10000);
+                unitIndex++;
+            }
+            
+            return result + '원';
+        }
+        
+        // 비급여 비중에 따른 배율 계산
+        function getMultiplier(nonCoveredPercent) {
+            if (nonCoveredPercent <= 5) {
+                return 3.0;
+            } else if (nonCoveredPercent <= 40) {
+                // 5%~40% 구간: 3.0에서 1.8로 선형 감소
+                const ratio = (nonCoveredPercent - 5) / (40 - 5);
+                return 3.0 - (3.0 - 1.8) * ratio;
+            } else {
+                // 40%~80% 구간: 1.8에서 1.2로 선형 감소
+                const ratio = (nonCoveredPercent - 40) / (80 - 40);
+                return 1.8 - (1.8 - 1.2) * ratio;
+            }
+        }
+        
+        // 입력 필드 포맷팅
+        function formatInput() {
+            const input = document.getElementById('cardRevenue');
+            const display = document.getElementById('cardRevenueDisplay');
+            const rawValue = removeCommas(input.value);
+            
+            if (rawValue > 0) {
+                input.value = addCommas(rawValue);
+                display.textContent = `(${toKorean(rawValue)})`;
+            } else {
+                display.textContent = '';
+            }
+        }
+
+        // 매출 계산 및 테이블 업데이트
+        function updateTable() {
+            const cardRevenue = removeCommas(document.getElementById('cardRevenue').value) || 300000000;
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = '';
+            
+            // 기준 총매출 (40% 기준)
+            const baseMultiplier = getMultiplier(40);
+            const baseTotalRevenue = cardRevenue * baseMultiplier;
+            
+            // 각 비급여 비중별 계산
+            for (let nonCoveredRatio = 5; nonCoveredRatio <= 80; nonCoveredRatio += 5) {
+                const coveredRatio = 100 - nonCoveredRatio;
+                const multiplier = getMultiplier(nonCoveredRatio);
+                const totalRevenue = cardRevenue * multiplier;
+                
+                const nonCoveredRevenue = totalRevenue * (nonCoveredRatio / 100);
+                const coveredRevenue = totalRevenue * (coveredRatio / 100);
+                const patientCoveredBurden = coveredRevenue / 3;
+                const patientNonCoveredBurden = nonCoveredRevenue;
+                const totalPatientBurden = patientCoveredBurden + patientNonCoveredBurden;
+                const growthRate = ((totalRevenue / baseTotalRevenue - 1) * 100).toFixed(1);
+                
+                const row = document.createElement('tr');
+                if (nonCoveredRatio === 40) {
+                    row.className = 'highlight';
+                }
+                
+                row.innerHTML = `
+                    <td>${nonCoveredRatio}%</td>
+                    <td>${coveredRatio}%</td>
+                    <td class="number">${formatNumber(totalRevenue)}원</td>
+                    <td class="number">${multiplier.toFixed(2)}배</td>
+                    <td class="number">${formatNumber(coveredRevenue)}원</td>
+                    <td class="number">${formatNumber(nonCoveredRevenue)}원</td>
+                    <td class="number">${formatNumber(patientCoveredBurden)}원</td>
+                    <td class="number">${formatNumber(patientNonCoveredBurden)}원</td>
+                    <td class="number">${formatNumber(totalPatientBurden)}원</td>
+                    <td class="number" style="color: ${growthRate >= 0 ? '#28a745' : '#dc3545'}">${growthRate > 0 ? '+' : ''}${growthRate}%</td>
+                `;
+                
+                tableBody.appendChild(row);
+            }
+        }
+
+        // 이벤트 리스너
+        document.getElementById('cardRevenue').addEventListener('input', function() {
+            formatInput();
+            updateTable();
+        });
+        
+        document.getElementById('cardRevenue').addEventListener('blur', formatInput);
+
+        // 페이지 로드 시 초기 실행
+        window.onload = function() {
+            formatInput();
+            updateTable();
+        };
+    </script>
+</body>
+</html>
