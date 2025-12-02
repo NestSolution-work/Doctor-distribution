@@ -33,6 +33,55 @@
             padding: 20px;
             border-radius: 5px;
             margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .input-content {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .promo-box {
+            display: block;
+            text-decoration: none;
+            background: linear-gradient(135deg, #2c5aa0 0%, #1a3d6e 100%);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(44, 90, 160, 0.3);
+            min-width: 200px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+        
+        .promo-box:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(44, 90, 160, 0.4);
+        }
+        
+        .promo-box .promo-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #ffd700;
+        }
+        
+        .promo-box .promo-brand {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            letter-spacing: 2px;
+        }
+        
+        .promo-box .promo-contact {
+            font-size: 15px;
+            opacity: 0.95;
+            font-weight: 500;
         }
         
         .input-group {
@@ -128,6 +177,16 @@
             font-size: 14px;
             color: #856404;
         }
+
+        @media (max-width: 768px) {
+            .input-section {
+                flex-direction: column;
+            }
+            
+            .promo-box {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -135,12 +194,20 @@
         <h1>🏥 병원 매출 예측 (NestSolution)</h1>
         
         <div class="input-section">
-            <h3>📊 기본 정보 입력</h3>
-            <div class="input-group">
-                <label for="cardRevenue">카드 매출 (원):</label>
-                <input type="text" id="cardRevenue" placeholder="300,000,000" value="300,000,000">
-                <div class="input-display" id="cardRevenueDisplay">(삼억원)</div>
+            <div class="input-content">
+                <h3>📊 기본 정보 입력</h3>
+                <div class="input-group">
+                    <label for="cardRevenue">카드 매출 (원):</label>
+                    <input type="text" id="cardRevenue" placeholder="300,000,000" value="300,000,000">
+                    <div class="input-display" id="cardRevenueDisplay">(삼억원)</div>
+                </div>
             </div>
+            
+            <a href="https://nestsolution.co.kr" target="_blank" class="promo-box">
+                <div class="promo-title">🏥 병·의원 솔루션!</div>
+                <div class="promo-brand">네스트</div>
+                <div class="promo-contact">📞 010.9470.8248</div>
+            </a>
         </div>
 
         <div class="summary-section">
